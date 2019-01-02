@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      html {
+				font-family: "Verdana", sans-serif;
+      }
+      .pijp, .pijp th, .pijp tr, .pijp td {
+        border-collapse: collapse;
+        margin: 0;
+        padding: 0;
+        border: none;
+        line-height: 0;
+      }
+      .tabel{
+        margin: auto;
+        border: 1px solid black;
+        border-collapse: collapse;
+      }
+      .tabel td {
+        padding: 5px;
+      }
+      .tabel th{
+        background-color: #f00;
+        border: 1px solid black;
+        color: #fff;
+      }
+      .tabel td.vert {
+        background-color: #aaa;
+      }
+      .rotate90 {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+      }
+      .rotate180 {
+        -webkit-transform: rotate(180deg);
+        -moz-transform: rotate(180deg);
+        -o-transform: rotate(180deg);
+        -ms-transform: rotate(180deg);
+        transform: rotate(180deg);
+      }
+      .rotate270 {
+        -webkit-transform: rotate(270deg);
+        -moz-transform: rotate(270deg);
+        -o-transform: rotate(270deg);
+        -ms-transform: rotate(270deg);
+        transform: rotate(270deg);
+      }
+      button {
+        transition-duration: 0.2s;
+        color: #fff;
+        background-color: #777;
+        border-radius: 5px;
+        border: 2px solid #555;
+        font-weight: bold;
+        font-size: 20px;
+        padding: 5px 15px;
+      }
+      button:hover {
+        background-color: #aaa;
+      }
+    </style>
+    <title>Erlang pipes</title>
+  </head>
+  <body>
+    <table>
+      <tr><td rowspan="2">
+          <table class="pijp">
+            <tr><td><img src="pijpBocht.png"                   ></td><td><img src="pijpRecht.png"></td><td><img src="pijpRecht.png"></td><td><img src="pijpBocht.png" class="rotate90" ></td></tr>
+            <tr><td><img src="pijpRecht.png" class="rotate90" ></td><td>                          </td><td>                          </td><td><img src="pijpFlow.png"                    ></td></tr>
+            <tr><td><img id="pumpOn" src="pompRecht.gif" class="rotate90" >
+                     <img id="pumpOff" src="pompRecht.png" class="rotate90" style="display: none"></td><td>                          </td><td>                          </td><td><img src="pijpRecht.png" class="rotate90" ></td></tr>
+            <tr><td><img src="pijpBocht.png" class="rotate270"></td><td><img src="pijpRecht.png"></td><td><img src="pijpRecht.png"></td><td><img src="pijpBocht.png" class="rotate180"></td></tr>
+          </table>
+        </td>
+        
+        <td>
+          <table class="tabel">
+            <tr><th colspan="2">Pomp</th></tr>
+            <tr><td class="vert">Status</td><td id="pumpstate">Aan</td></tr>
+            <tr><td class="vert"><button onclick="setPump(true)">On</button></td><td><button onclick="setPump(false)">Off</button></td></tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table class="tabel">
+            <tr><th colspan="2">Flowmeter</th></tr>
+            <tr><td class="vert">Waarde</td><td id="flowVal">237.5</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  <script>
+    var flowInterval = null;
+    window.onload = function() {
+      flowInterval = setInterval(getFlow, 1000);
+    }
+
+    function setPump(on) {
+      sendRequest("/setPump?on=" + (on ? "1" : "0"), setPumpHandler);
+    }
+    function setPumpHandler(data) {
+      console.log("setPumpHandler: " + data);
+      getPumpHandler(data);
+    }
+
+    function getPump() {
+      sendRequest("/getPump", getPumpHandler);
+    }
+    function getPumpHandler(data) {
+      console.log("getPumpHandler: " + data);
+      var on = (data == "1");
+      document.getElementById("pump" + (on ? "On" : "Off")).style.display = "";
+      document.getElementById("pump" + (!on ? "On" : "Off")).style.display = "none";
+      document.getElementById("pumpstate").innerHTML = (on ? "Aan" : "Uit");
+    }
+
+    function getFlow() {
+      sendRequest("/getFlow", getFlowHandler);
+    }
+    function getFlowHandler(data) {
+      console.log("getFlowHandler: " + data);
+      document.getElementById("flowVal").innerHTML = data;
+    }
+
+    function sendRequest(addr, func=null) {
+      xhttp = new XMLHttpRequest();
+      xhttp.onload = function() {
+        if (func != null)
+          func(xhttp.response);
+      };
+      xhttp.onerror = function() {
+        clearInterval(flowInterval);
+        alert("Error");
+      };
+      xhttp.open("GET", addr, true);
+      xhttp.send();
+    }
+  </script>
+</html> 
