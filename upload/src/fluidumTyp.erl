@@ -63,4 +63,4 @@ process_connection(C, error, Todo_List, Circuit) ->
 	{ok, C_list ++  Updated_Todo_list, Updated_Circuit};
 
 process_connection( _, _ , Todo_List, Circuit) -> 
-{ok, Todo_List, Circuit}.
+	{ok, Todo_List, Circuit}.

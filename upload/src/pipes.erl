@@ -41,7 +41,7 @@ start() ->
 	ok.
 	
 createPipeTyp() -> 
-	{ok, P} = pipeTyp:create(),
+	{ok, P} = resource_type:create(pipeTyp, []),
 	P.
 	
 createPipeInstance(P) ->
@@ -51,7 +51,7 @@ createPipeInstance(P) ->
 connectPipe(Pipe0, Pipe1) ->
 	{ok, [_, Conn0Out]} = resource_instance:list_connectors(Pipe0),
 	{ok, [Conn1In, _]}  = resource_instance:list_connectors(Pipe1),
-	io:fwrite("Connecting ~p to ~p~n", [Conn0Out, Conn1In]),
+	io:fwrite("Connecting ~p to ~p~n", [Pipe0, Pipe1]),
 	connector:connect(Conn0Out, Conn1In).
 
 connectPipes([P0|[P1|List]]) ->

@@ -13,6 +13,12 @@ start() ->
 	%PumpTyp = pumpTyp:create(),
 	%FlowTyp = flowMeterTyp:create(),
 
+	{ok, Pipes} = createPipes(12),
+	connectPipes(Pipes),
+	{ok, [_, RootConn]} = resource_instance:list_connectors(lists:nth(1, Pipes)),
+	io:fwrite("Pipes connected~n"),
+	printPipes(Pipes),
+
 	{ok, PumpRes} = resource_type:create(pumpTyp, []),
 	{ok, FlowRes} = resource_type:create(flowMeterTyp, []),
 	{ok, FluidRes} = resource_type:create(fluidumTyp, []),
@@ -20,12 +26,6 @@ start() ->
 	io:fwrite("PumpResPid: ~p~n", [PumpRes]),
 	io:fwrite("FlowResPid: ~p~n", [FlowRes]),
 	io:fwrite("FluidResPid: ~p~n", [FluidRes]),
-
-	{ok, Pipes} = createPipes(12),
-	connectPipes(Pipes),
-	{ok, [_, RootConn]} = resource_instance:list_connectors(lists:nth(1, Pipes)),
-	io:fwrite("Pipes connected~n"),
-	printPipes(Pipes),
 
 	{ok, FluidInstPid} = fluidumInst:create(RootConn, FluidRes),
 	{ok, PumpInstPid} = pumpInst:create(self(), PumpRes, lists:nth(1, Pipes), fun pumpCmd/1),
@@ -41,7 +41,7 @@ start() ->
 	ok.
 	
 createPipeTyp() -> 
-	{ok, P} = pipeTyp:create(),
+	{ok, P} = resource_type:create(pipeTyp, []),
 	P.
 	
 createPipeInstance(P) ->
@@ -51,7 +51,7 @@ createPipeInstance(P) ->
 connectPipe(Pipe0, Pipe1) ->
 	{ok, [_, Conn0Out]} = resource_instance:list_connectors(Pipe0),
 	{ok, [Conn1In, _]}  = resource_instance:list_connectors(Pipe1),
-	io:fwrite("Connecting ~p to ~p~n", [Conn0Out, Conn1In]),
+	io:fwrite("Connecting ~p to ~p~n", [Pipe0, Pipe1]),
 	connector:connect(Conn0Out, Conn1In).
 
 connectPipes([P0|[P1|List]]) ->
