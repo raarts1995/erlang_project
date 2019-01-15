@@ -1,5 +1,5 @@
 -module(flowMeterInst).
--export([create/5, init/5, estimate_flow/1, measure_flow/1]).
+-export([create/4, init/4, estimate_flow/1, measure_flow/1]).
 % -export([commission/1, activate/1]).
 % -export([deactivate/1, decommission/1]).
 
@@ -7,11 +7,11 @@
 % this resource instance is passed to the create function.
 % RealWorldCmdFn is a function to read out the real-world flowMeter. 
 
-create(Host, FlowMeterTyp_Pid, ResInst_Pid, Fluidum_Pid, RealWorldCmdFn) -> 
-	{ok, spawn(?MODULE, init, [Host, FlowMeterTyp_Pid, ResInst_Pid, Fluidum_Pid, RealWorldCmdFn])}.
+create(Host, FlowMeterTyp_Pid, ResInst_Pid, RealWorldCmdFn) -> 
+	{ok, spawn(?MODULE, init, [Host, FlowMeterTyp_Pid, ResInst_Pid, RealWorldCmdFn])}.
 
-init(Host, FlowMeterTyp_Pid, ResInst_Pid, Fluidum_Pid, RealWorldCmdFn) -> 
-	{ok, State} = apply(resource_type, get_initial_state, [FlowMeterTyp_Pid, self(),     [ResInst_Pid, Fluidum_Pid, RealWorldCmdFn]]),
+init(Host, FlowMeterTyp_Pid, ResInst_Pid, RealWorldCmdFn) -> 
+	{ok, State} = apply(resource_type, get_initial_state, [FlowMeterTyp_Pid, self(),     [ResInst_Pid, RealWorldCmdFn]]),
 									%  get_initial_state  (ResTyp_Pid,       ThisResInst, TypeOptions) 
 	survivor:entry({ flowMeterInst_created, State }),
 	loop(Host, State, FlowMeterTyp_Pid, ResInst_Pid).

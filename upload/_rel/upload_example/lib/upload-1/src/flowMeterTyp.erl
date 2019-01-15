@@ -12,11 +12,11 @@ init() ->
 
 loop() -> 
 	receive
-		{initial_state, [MeterInst_Pid, [ResInst_Pid, Fluidum_Pid, RealWorldCmdFn]], ReplyFn} ->
-			%{ok, [L | _ ] } = resource_instance:list_locations(ResInst_Pid),
-			%{ok, Fluidum} = location:get_Visitor(L),
+		{initial_state, [MeterInst_Pid, [ResInst_Pid, RealWorldCmdFn]], ReplyFn} ->
+			{ok, [L | _ ] } = resource_instance:list_locations(ResInst_Pid),
+			{ok, Fluidum} = location:get_Visitor(L),
 			ReplyFn(#{meterInst => MeterInst_Pid, resInst => ResInst_Pid, 
-					  fluidum => Fluidum_Pid, rw_cmd => RealWorldCmdFn}), 
+					  fluidum => Fluidum, rw_cmd => RealWorldCmdFn}), 
 			loop();
 		{measure_flow, State, ReplyFn} -> 
 			#{rw_cmd := ExecFn} = State,

@@ -23,13 +23,19 @@ start() ->
 
 	{ok, Pipes} = createPipes(12),
 	printPipes(Pipes),
-	connectPipes(Pipes),
-	{ok, [_, RootConn]} = resource_instance:list_connectors(lists:nth(1, Pipes)),
+
+	{ok, PumpInstPid} = pumpInst:create(self(), PumpRes, lists:nth(1, Pipes), fun pumpCmd/1),
+	{ok, FlowInstPid} = flowMeterInst:create(self(), FlowRes, lists:nth(6, Pipes), fun flowCmd/0),
+
+	FlowMeterAdded = lists:sublist(Pipes,5) ++ [FlowInstPid] ++ lists:nthtail(6,Pipes),
+	FullCircuit = [PumpInstPid] ++ lists:nthtail(1,FlowMeterAdded),
+
+	connectPipes(FullCircuit),
 	io:fwrite("Pipes connected~n"),
+	{ok, [_, RootConn]} = resource_instance:list_connectors(lists:nth(1, FullCircuit)),
 
 	{ok, FluidInstPid} = fluidumInst:create(RootConn, FluidRes),
-	{ok, PumpInstPid} = pumpInst:create(self(), PumpRes, lists:nth(1, Pipes), fun pumpCmd/1),
-	{ok, FlowInstPid} = flowMeterInst:create(self(), FlowRes, lists:nth(6, Pipes), FluidInstPid, fun flowCmd/0),
+
 	register(pumpInst, PumpInstPid),
 	register(flowInst, FlowInstPid),
 	register(fluidInst, FluidInstPid),

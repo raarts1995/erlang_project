@@ -89,7 +89,7 @@
         <td>
           <table class="tabel">
             <tr><th colspan="2">Flowmeter</th></tr>
-            <tr><td class="vert">Waarde</td><td id="flowVal">237.5</td></tr>
+            <tr><td class="vert">Waarde</td><td id="flowVal">-</td></tr>
           </table>
         </td>
       </tr>
@@ -125,7 +125,7 @@
     }
     function getFlowHandler(data) {
       console.log("getFlowHandler: " + data);
-      document.getElementById("flowVal").innerHTML = data;
+      document.getElementById("flowVal").innerHTML = (data ? data : "-");
     }
 
     function sendRequest(addr, func=null) {
