@@ -69,7 +69,7 @@ connectPipes([Last], First) ->
 createPipes(N) -> createPipes([], createPipeTyp(), N).
 createPipes(List, P, N) when N > 0 ->
 	createPipes([createPipeInstance(P)|List], P, N-1);
-createPipes(List, _, _) -> {ok, List}.
+createPipes(List, _, _) -> {ok, lists:reverse(List)}.
 
 printPipes(List) -> printPipes(List, 1).
 printPipes([H|List], N) ->
