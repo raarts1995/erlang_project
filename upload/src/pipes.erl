@@ -10,44 +10,39 @@
 
 start() ->
 	survivor:start(),
-	%PumpTyp = pumpTyp:create(),
-	%FlowTyp = flowMeterTyp:create(),
 
-	{ok, PumpRes} = resource_type:create(pumpTyp, []),
-	{ok, FlowRes} = resource_type:create(flowMeterTyp, []),
-	{ok, FluidRes} = resource_type:create(fluidumTyp, []),
+	{ok, PumpRes} = pumpTyp:create(),
+	{ok, FlowRes} = flowMeterTyp:create(),
 
 	io:fwrite("PumpResPid: ~p~n", [PumpRes]),
 	io:fwrite("FlowResPid: ~p~n", [FlowRes]),
-	io:fwrite("FluidResPid: ~p~n", [FluidRes]),
 
+	%generate 12 pipes
 	{ok, Pipes} = createPipes(12),
 	printPipes(Pipes),
 
+	%create pump at 1st pipe and flowmeter at 6th pipe
 	{ok, PumpInstPid} = pumpInst:create(self(), PumpRes, lists:nth(1, Pipes), fun pumpCmd/1),
 	{ok, FlowInstPid} = flowMeterInst:create(self(), FlowRes, lists:nth(6, Pipes), fun flowCmd/0),
 
+	%replace 1st and 6th pipe with pump and flowmeter
 	FlowMeterAdded = lists:sublist(Pipes,5) ++ [FlowInstPid] ++ lists:nthtail(6,Pipes),
 	FullCircuit = [PumpInstPid] ++ lists:nthtail(1,FlowMeterAdded),
 
+	%connect everything
 	connectPipes(FullCircuit),
 	io:fwrite("Pipes connected~n"),
-	{ok, [_, RootConn]} = resource_instance:list_connectors(lists:nth(1, FullCircuit)),
 
-	{ok, FluidInstPid} = fluidumInst:create(RootConn, FluidRes),
-
+	%register pump and flowmeter pids
 	register(pumpInst, PumpInstPid),
 	register(flowInst, FlowInstPid),
-	register(fluidInst, FluidInstPid),
 	
 	io:fwrite("PumpInstPid: ~p~n", [PumpInstPid]),
 	io:fwrite("FlowInstPid: ~p~n", [FlowInstPid]),
-	io:fwrite("FluidInstPid: ~p~n", [FluidInstPid]),
-	%survivor ! stop.
 	ok.
 	
 createPipeTyp() -> 
-	{ok, P} = resource_type:create(pipeTyp, []),
+	{ok, P} = pipeTyp:create(),
 	P.
 	
 createPipeInstance(P) ->
@@ -58,7 +53,8 @@ connectPipe(Pipe0, Pipe1) ->
 	{ok, [_, Conn0Out]} = resource_instance:list_connectors(Pipe0),
 	{ok, [Conn1In, _]}  = resource_instance:list_connectors(Pipe1),
 	io:fwrite("Connecting ~p to ~p~n", [Pipe0, Pipe1]),
-	connector:connect(Conn0Out, Conn1In).
+	connector:connect(Conn0Out, Conn1In),
+	connector:connect(Conn1In, Conn0Out).
 
 connectPipes([P0|[P1|List]]) ->
 	connectPipe(P0, P1),

@@ -1,7 +1,7 @@
 -module(resource_instance).
 -export([create/2]).
 -export([list_connectors/1, list_locations/1]).
--export([get_type/1, get_ops/1, get_state/1]).
+-export([get_type/1, get_ops/1, get_state/1, get_host/1, set_host/2]).
 -export([get_flow_influence/1]).
 %%% More to follow later. 
 
@@ -27,4 +27,10 @@ get_state(ResInst_Pid) -> % current state understood by type (only)
 	msg:get(ResInst_Pid, get_state).
 
 get_flow_influence(ResInst_Pid) -> 
-msg:get(ResInst_Pid, get_flow_influence).
+	msg:get(ResInst_Pid, get_flow_influence).
+
+set_host(ResInst_Pid, NewHost_Pid) -> 
+	ResInst_Pid ! {set_host, NewHost_Pid}.
+
+get_host(ResInst_Pid) ->
+	msg:get(ResInst_Pid, get_host). 

@@ -12,9 +12,7 @@ init() ->
 
 loop() -> 
 	receive
-
-%    get_initial_state, self(),     ]
-		{initial_state, [ResInst_Pid, [PipeInst_Pid, RealWorldCmdFn]], ReplyFn} ->
+		{initial_state, {ResInst_Pid, {PipeInst_Pid, RealWorldCmdFn}}, ReplyFn} ->
 			ReplyFn(#{resInst => ResInst_Pid, pipeInst => PipeInst_Pid, 
 					  rw_cmd => RealWorldCmdFn, on_or_off => off}), 
 			loop();
@@ -29,6 +27,9 @@ loop() ->
 		{isOn, State, ReplyFn} -> 
 			#{on_or_off := OnOrOff} = State, 
 			ReplyFn(OnOrOff),
+			loop();
+		{getOps, _State, ReplyFn} -> 
+			ReplyFn([switch_on, switch_off, is_on]),
 			loop();
 		{flow_influence, State, ReplyFn} -> 
 			#{on_or_off := OnOrOff} = State,

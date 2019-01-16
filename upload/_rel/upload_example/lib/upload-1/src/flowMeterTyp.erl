@@ -1,5 +1,5 @@
 -module(flowMeterTyp).
--export([create/0, init/0]).
+-export([create/0, init/0, computeFlow/1]).
 % -export([dispose/2, enable/2, new_version/2]).
 % -export([get_initial_state/3, get_connections_list/2]). % use resource_type
 % -export([update/3, execute/7, refresh/4, cancel/4, update/7, available_ops/2]). 
@@ -12,7 +12,7 @@ init() ->
 
 loop() -> 
 	receive
-		{initial_state, [MeterInst_Pid, [ResInst_Pid, RealWorldCmdFn]], ReplyFn} ->
+		{initial_state, {MeterInst_Pid, {ResInst_Pid, RealWorldCmdFn}}, ReplyFn} ->
 			{ok, [L | _ ] } = resource_instance:list_locations(ResInst_Pid),
 			{ok, Fluidum} = location:get_Visitor(L),
 			ReplyFn(#{meterInst => MeterInst_Pid, resInst => ResInst_Pid, 
@@ -23,13 +23,16 @@ loop() ->
 			ReplyFn(ExecFn()),
 			loop(); 
 		{estimate_flow, State, ReplyFn} -> 
-			#{fluidum := F} = State, 
-			{ok, C} = fluidumInst:get_resource_circuit(F),
-			ReplyFn(computeFlow(C)),
-			loop(); 
-		{isOn, State, ReplyFn} -> 
-			#{on_or_off := OnOrOff} = State, 
-			ReplyFn(OnOrOff),
+			#{resInst := ResInst_Pid} = State,
+			{ok, [L | _ ] } = resource_instance:list_locations(ResInst_Pid),
+			{ok, Fluidum} = location:get_Visitor(L), 
+			 %ReplyFn(Fluidum),
+			 {ok, C} = fluidumInst:get_resource_circuit(Fluidum),
+			% ReplyFn(C), 
+			survivor:entry({estimateflow, for, C}), 
+			Answer = computeFlow(C), 
+			survivor:entry({estimateflow, should, be, Answer}),
+			ReplyFn(Answer),
 			loop()
 	end. 
 
@@ -64,4 +67,4 @@ compute({Low, High}, InflFnCircuit) ->
 eval(Flow, [Fn | RemFn] , Acc) ->
 	eval(Flow, RemFn, Acc + Fn(Flow));
 
-eval(_Flow, [], Acc) -> Acc.
+eval(_Flow, [], Acc) -> Acc. 

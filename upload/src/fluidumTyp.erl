@@ -13,8 +13,8 @@ get_resource_circuit(TypePid, State) ->
 	msg:get(TypePid, resource_circuit, State). 
 
 loop() -> 
-	receive
-		{initial_state, [ResInst_Pid, [Root_ConnectorPid, TypeOptions]], ReplyFn} -> 
+	receive 
+		{initial_state, {ResInst_Pid, {Root_ConnectorPid, TypeOptions}}, ReplyFn} -> 
 			{ok, C} = discover_circuit(Root_ConnectorPid), 
 			ReplyFn(#{resInst => ResInst_Pid, circuit => C, typeOptions => TypeOptions}), 
 			loop();
@@ -25,9 +25,7 @@ loop() ->
 			ReplyFn([]),
 			loop();
 		{resource_circuit, State, ReplyFn} -> 
-			#{circuit := C} = State, 
-			{_RootC, CircuitMap} = C, 
-			ReplyFn(extract(CircuitMap)),
+			#{circuit := { _ , C} } = State, ReplyFn(extract(C)), 
 			loop()
 	end. 
 
@@ -64,3 +62,8 @@ process_connection(C, error, Todo_List, Circuit) ->
 
 process_connection( _, _ , Todo_List, Circuit) -> 
 	{ok, Todo_List, Circuit}.
+
+
+
+
+
