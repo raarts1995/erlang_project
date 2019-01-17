@@ -5,6 +5,7 @@
 -export([createPipeTyp/0, createPipeInstance/1]).
 -export([connectPipe/2, connectPipes/1]).
 -export([createPipes/1, createPipes/3]).
+-export([arriveFluidum/2]).
 -export([pumpCmd/1, flowCmd/0]).
 -export([switchPump/1, pumpState/0, getFlow/0]).
 
@@ -13,9 +14,11 @@ start() ->
 
 	{ok, PumpRes} = pumpTyp:create(),
 	{ok, FlowRes} = flowMeterTyp:create(),
+	{ok, FluidRes} = fluidumTyp:create(),
 
 	io:fwrite("PumpResPid: ~p~n", [PumpRes]),
 	io:fwrite("FlowResPid: ~p~n", [FlowRes]),
+	io:fwrite("FluidResPid: ~p~n", [FluidRes]),
 
 	%generate 12 pipes
 	{ok, Pipes} = createPipes(12),
@@ -33,12 +36,18 @@ start() ->
 	connectPipes(FullCircuit),
 	io:fwrite("Pipes connected~n"),
 
+	{ok, [RootConn, _]} = resource_instance:list_connectors(lists:nth(1, FullCircuit)),
+	{ok, FluidInstPid} = fluidumInst:create(RootConn, FluidRes),
+	arriveFluidum(FullCircuit, FluidInstPid),
+
 	%register pump and flowmeter pids
 	register(pumpInst, PumpInstPid),
 	register(flowInst, FlowInstPid),
+	register(fluidInst, FluidInstPid),
 	
 	io:fwrite("PumpInstPid: ~p~n", [PumpInstPid]),
 	io:fwrite("FlowInstPid: ~p~n", [FlowInstPid]),
+	io:fwrite("FluidInstPid: ~p~n", [FluidInstPid]),
 	ok.
 	
 createPipeTyp() -> 
@@ -73,9 +82,16 @@ createPipes(List, _, _) -> {ok, lists:reverse(List)}.
 
 printPipes(List) -> printPipes(List, 1).
 printPipes([H|List], N) ->
-	io:format("Pijp ~p: ~p~n", [N, H]),
+	io:fwrite("Pijp ~p: ~p~n", [N, H]),
 	printPipes(List, N+1);
 printPipes([], _) -> ok.
+
+arriveFluidum([H|Pipes], FluidPid) ->
+	io:fwrite("Inserting fluidum in pipe ~p~n", [H]),
+	{ok, [Location]} = resource_instance:list_locations(H),
+	location:arrival(Location, FluidPid),
+	arriveFluidum(Pipes, FluidPid);
+arriveFluidum([], _FluidPid) -> ok.
 
 pumpCmd(on) ->
 	io:fwrite("Pump on~n"),

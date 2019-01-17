@@ -8,7 +8,9 @@
 init(Req0, Opts) ->
 	io:fwrite("flow requested~n"),
 	Flow = pipes:getFlow(),
+	io:fwrite("Flow = ~p~n", [Flow]),
+	FlowText = float_to_list(Flow, [{decimals, 3}]),
 	Req = cowboy_req:reply(200, #{
 		<<"content-type">> => <<"text/plain">>
-	}, Flow, Req0),
+	}, FlowText, Req0),
 	{ok, Req, Opts}.
